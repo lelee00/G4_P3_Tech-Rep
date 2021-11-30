@@ -235,22 +235,48 @@ for (level in levels(as.factor(otters$Date))){
   date = c(date, (rep(level,8)))
 }
 otter_pca_time = data.frame(variable = rep(colnames(otters)[-c(1,5,6,7,8,14,15,16)],20), date = date)
-otter_pca_time
+
+date = c()
+for (level in levels(as.factor(otters$Date))){
+  date = c(date, (rep(level,5)))
+}
+otter_sd <- data.frame(date = date, p = rep(1:5, 20))
 for (d in 1:length(levels(as.factor(otters$Date)))){
   date = levels(as.factor(otters$Date))[d]
   otter_pca <- otters %>% filter(Date == date) %>% select(colnames(otters)[-c(1,5,6,7,8,14,15,16)]) %>% prcomp(scale. = T)
   # print(otter_pca %>% ggbiplot(group = rownames(otters$Site), scale = 1) + scale_color_manual(values = c("Alpha" = "red", "Delta" = "orange","Gamma"="yellow","Omega"="green", "Omicron" = "blue")))
   #print(otter_pca$rotation)
   for (i in 1:8){
-    otter_pca_time$pc1_rot[d*i] = as.numeric(otter_pca$rotation[i,1])
-    otter_pca_time$pc2_rot[d*i] = as.numeric(otter_pca$rotation[i,2])
+    var = colnames(otters)[-c(1,5,6,7,8,14,15,16)][i]
+    otter_pca_time$pc1_rot[otter_pca_time$variable == var & otter_pca_time$date == date] = as.numeric(otter_pca$rotation[i,1])
+    otter_pca_time$pc2_rot[otter_pca_time$variable == var & otter_pca_time$date == date] = as.numeric(otter_pca$rotation[i,2])
+  }
+  sd <- otter_pca$sdev
+  var = sd^2
+  varPercent <- var/sum(var) * 100
+  otter_sd$varPercent[]
+  for (p in 1:5){
+    otter_sd$varPercent[otter_sd$date == date & otter_sd$p == p] = varPercent[p]
   }
 }
-otter_pca
+aggregate(varPercent ~ date, data = otter_sd[otter_sd$p == 1 | otter_sd$p == 2,], sum)
+otter_sd[otter_sd$p == 1 | otter_sd$p == 2,] %>% ggplot(aes(x = date, y = varPercent, group = as.factor(p), colour = as.factor(p))) + geom_point() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 otter_pca_time
-otter_pca_time %>% ggplot(aes(x = date, y = pc2_rot/pc1_rot, colour = variable, group = variable)) + geom_line() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+otter_pca_time %>% ggplot(aes(x = date, y = abs(pc2_rot/pc1_rot), colour = variable, group = variable)) + geom_line() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggbiplot(otter_pca)
+
+otters %>% filter(Date == "2019-05-01") %>% select(colnames(otters)[-c(1,5,6,7,8,14,15,16)]) %>% prcomp(scale. = T) %>% ggbiplot()
+otters %>% filter(Date == "2019-05-01") %>% select(colnames(otters)[-c(1,5,6,7,8,14,15,16)]) %>% prcomp(scale. = T) %>% .$rotation
+otters %>% filter(Date == "2019-05-01") %>% select(colnames(otters)[-c(1,5,6,7,8,14,15,16)]) %>% prcomp(scale. = T) %>% .$x
 otters %>% ggplot(aes(x = Date, y = log(Activity), colour = Site)) + geom_line()
+
+otter_pca_time %>% ggplot(aes(x = date, y = abs(pc2_rot/pc1_rot), colour = variable, group = variable)) + geom_line() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## That peak means that Water is contributing significantly more to PC2 than it is to PC1
+
 ```
+
 
 ## Conclusion
 
