@@ -278,6 +278,8 @@ otter_pca_time %>% ggplot(aes(x = date, y = abs(pc2_rot/pc1_rot), colour = varia
 ```
 
 
+
+
 ## Conclusion
 
 
